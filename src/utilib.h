@@ -2,20 +2,26 @@
 
 #include <math.h>
 
-static const double DOUBLE_PRECISION = 1e-6;
+static const double DOUBLE_PRECISION = 1e-9;
 
-int compare(double num1, double num2);
+int dcompare(double num1, double num2, double precision);
+int dcompare(double num1, double num2);
 
-#ifndef UTB_DECLARATIONS_ONLY
+#ifdef UTB_DEFINITIONS
 
-int compare(double num1, double num2)
+int dcompare(double num1, double num2, double precision)
 {
-    if (fabs(num1 - num2) < DOUBLE_PRECISION) { return 0; }
+    if (fabs(num1 - num2) < precision) { return 0; }
 
     if (num1 > num2) { return 1; }
 
     return -1;
 }
 
-#undef UTB_DECLARATIONS_ONLY
+int dcompare(double num1, double num2)
+{
+    return dcompare(num1, num2, DOUBLE_PRECISION);
+}
+
+#undef UTB_DEFINITIONS
 #endif

@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <direct.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -6,11 +7,18 @@
 
 #define CHECK_NULL(value, action) if (value == nullptr) { action; }
 
-bool deleteNode        (ETNode* node, va_list args);
+bool deleteNode            (ETNode* node, va_list args);
 
-bool preOrderTraverse  (ETNode* root, bool (*function)(ETNode* node, va_list args), va_list args);
-bool inOrderTraverse   (ETNode* root, bool (*function)(ETNode* node, va_list args), va_list args);
-bool postOrderTraverse (ETNode* root, bool (*function)(ETNode* node, va_list args), va_list args);
+bool preOrderTraverse      (ETNode* root, bool (*function)(ETNode* node, va_list args), va_list args);
+bool inOrderTraverse       (ETNode* root, bool (*function)(ETNode* node, va_list args), va_list args);
+bool postOrderTraverse     (ETNode* root, bool (*function)(ETNode* node, va_list args), va_list args);
+    
+int  counterFileUpdate     (const char* filename);
+void graphDumpSubtree      (FILE* file, ETNode* node);
+
+bool skipFirstParantheses  (ETNode* operationNode);
+bool skipSecondParantheses (ETNode* operationNode);
+void latexDumpSubtree      (FILE* file, ETNode* node);
 
 ExprTree* construct(ExprTree* tree)
 {
@@ -94,6 +102,21 @@ bool deleteNode(ETNode* node, va_list args)
     return ET_TRAVERSE_RUN;
 }
 
+void copyNode(ETNode* dest, const ETNode* src)
+{
+    assert(dest != nullptr);
+    assert(src  != nullptr);
+
+    dest->type   = src->type;
+    dest->data   = src->data;
+    dest->parent = src->parent;
+    dest->left   = src->left;
+    dest->right  = src->right;
+
+    if (src->left  != nullptr) { src->left->parent  = dest; }
+    if (src->right != nullptr) { src->right->parent = dest; }
+}
+
 ETNode* copyTree(const ETNode* node)
 {
     if (node == nullptr) { return nullptr; }
@@ -102,8 +125,8 @@ ETNode* copyTree(const ETNode* node)
 }
 
 #define TRAVERSE_SUBTREE(traverse, side) if (traverse(root->side, function, args)  == !ET_TRAVERSE_RUN) \
-                                         {                                                                 \
-                                             return !ET_TRAVERSE_RUN;                                      \
+                                         {                                                              \
+                                             return !ET_TRAVERSE_RUN;                                   \
                                          }
 
 void preOrderTraverse(ETNode* root, bool (*function)(ETNode* node, va_list args), ...)
@@ -179,11 +202,6 @@ bool postOrderTraverse(ETNode* root, bool (*function)(ETNode* node, va_list args
     return ET_TRAVERSE_RUN;
 }
 
-bool isOperationUnary(Operation operation)
-{
-    return operation >= UNARY_OPERATIONS_START;
-}
-
 bool isLeft(const ETNode* node)
 {
     assert(node         != nullptr);
@@ -192,25 +210,11 @@ bool isLeft(const ETNode* node)
     return node == node->parent->left;
 }
 
-bool isNumeric(const ETNode* node)
-{
-    assert(node != nullptr);
-
-    return isTypeNumber(node) || isTypeConst(node);
-}
-
 bool isTypeNumber(const ETNode* node)
 {
     assert(node != nullptr);
 
     return node->type == TYPE_NUMBER;
-}
-
-bool isTypeConst(const ETNode* node)
-{
-    assert(node != nullptr);
-
-    return node->type == TYPE_CONST;
 }
 
 bool isTypeVar(const ETNode* node)
@@ -227,20 +231,13 @@ bool isTypeOp(const ETNode* node)
     return node->type == TYPE_OP;
 }
 
-bool isArithmeticOp(Operation op)
+bool hasVariable(ETNode* root, char variable)
 {
-    return op >= OP_ADD && op <= OP_DIV;
-}
+    if (root == nullptr) { return false; }
 
-bool isTrigOp(Operation op)
-{
-    return op >= OP_SIN && op <= OP_TAN;
-}
+    if (root->type == TYPE_VAR && root->data.var == variable) { return true; }
 
-bool isConstant(double value)
-{
-    return compare(value, E_CONST)  == 0 || 
-           compare(value, PI_CONST) == 0;
+    return hasVariable(root->left, variable) || hasVariable(root->right, variable);
 }
 
 void setData(ETNode* node, NodeType type, ETNodeData data)
@@ -255,9 +252,7 @@ void setData(ETNode* node, double number)
 {
     assert(node != nullptr);
 
-    if (isConstant(number)) { node->type = TYPE_CONST; }
-    else                    { node->type = TYPE_NUMBER; }
-
+    node->type        = TYPE_NUMBER;
     node->data.number = number;
 }
 
@@ -277,10 +272,281 @@ void setData(ETNode* node, Operation op)
     node->data.op = op;
 }
 
-const char* getConstantName(double constant)
+int counterFileUpdate(const char* filename)
 {
-    if      (compare(constant, E_CONST)  == 0) { return "e"; }   
-    else if (compare(constant, PI_CONST) == 0) { return "pi"; }  
+    assert(filename != nullptr);
 
-    return "NO_SUCH_CONSTANT"; 
+    int count = 0;
+
+    FILE* counterFile = fopen(filename, "r+");
+    if (counterFile == nullptr)
+    {
+        counterFile = fopen(filename, "w");
+        count = -1;
+    }
+    else
+    {
+        fscanf(counterFile, "%u", &count);
+        fseek(counterFile, 0, SEEK_SET);
+    }
+
+    fprintf(counterFile, "%u", count + 1);
+    fclose(counterFile);
+
+    return count;
+}
+
+void graphDump(ExprTree* tree)
+{
+    assert(tree != nullptr);
+
+    int count = counterFileUpdate("log/tree_dumps/graph/count.cnt");
+
+    char textFilename[128] = {};
+    snprintf(textFilename, sizeof(textFilename), "%s%u.txt", "log/tree_dumps/graph/text/tree", count);
+
+    char imageFilename[128] = {};
+    snprintf(imageFilename, sizeof(imageFilename), "%s%u.svg", "log/tree_dumps/graph/img/tree", count);
+
+    FILE* file = fopen(textFilename, "w");
+    assert(file != nullptr);
+
+    fprintf(file,
+            "digraph structs {\n"
+            "\tnode [shape=\"circle\", style=\"filled\", fontcolor=\"#DCDCDC\", fillcolor=\"#2F4F4F\"];\n\n");
+
+    if (tree->root == nullptr) { fprintf(file, "\t\"ROOT\" [label = \"Empty database\"];\n"); }
+    else                       { graphDumpSubtree(file, tree->root); }
+
+    fprintf(file, "}");
+
+    fclose(file);
+
+    char dotCmd[256] = {};
+
+    snprintf(dotCmd, sizeof(dotCmd), "dot -Tsvg %s -o %s", textFilename, imageFilename);
+    system(dotCmd);
+
+    snprintf(dotCmd, sizeof(dotCmd), "start %s", imageFilename);
+    system(dotCmd);
+}
+
+void graphDumpSubtree(FILE* file, ETNode* node)
+{
+    assert(file != nullptr);
+    
+    if (node == nullptr) { return; }
+
+    fprintf(file, "\t\"%p\" [label=", node);
+
+    NodeType    type      = node->type; 
+    const char* constName = nullptr;
+    switch (type)
+    {
+        case TYPE_NUMBER:
+            constName = getConstantName(node->data.number);
+            if (constName != nullptr)
+            {
+                fprintf(file, "<<B><I>%s</I></B>>, color=\"#75A673\", fillcolor=\"#EDFFED\", fontcolor=\"#75A673\"];\n", constName);
+            }
+            else
+            {
+                fprintf(file, "\"%lg\", color=\"#D2691E\", fillcolor=\"#FFFAEF\", fontcolor=\"#FF7F50\"];\n", node->data.number);
+            }
+
+            break;
+
+        case TYPE_VAR:
+            fprintf(file, "<<B><I>%c</I></B>>, color=\"#367ACC\", fillcolor=\"#E0F5FF\", fontcolor=\"#4881CC\"];\n", node->data.var);
+            break;
+
+        case TYPE_OP:
+            fprintf(file, "\"%s\", color=\"#000000\", fillcolor=\"#FFFFFF\", fontcolor=\"#000000\"];\n", OPERATIONS[node->data.op]);
+            break;
+
+        default:
+            assert(! "VALID TYPE");
+            break;
+    }
+
+    if (node->parent != nullptr)
+    {
+        if (isLeft(node))
+        {
+            fprintf(file, "\t\"%p\":sw->\"%p\";\n", node->parent, node);
+        }
+        else
+        {
+            fprintf(file, "\t\"%p\":se->\"%p\";\n", node->parent, node);
+        }
+    }   
+
+    graphDumpSubtree(file, node->left);
+    graphDumpSubtree(file, node->right);
+}
+
+void latexDump(ExprTree* tree)
+{
+    assert(tree       != nullptr);
+    assert(tree->root != nullptr);
+
+    int count = counterFileUpdate("log/tree_dumps/latex/count.cnt");
+
+    const char* texDir = "log/tree_dumps/latex/text/";
+    const char* pdfDir = "log/tree_dumps/latex/pdf";
+
+    char filename[128] = {};
+    snprintf(filename, sizeof(filename), "%stree%u.tex", texDir, count);
+
+    FILE* file = fopen(filename, "w");
+    assert(file != nullptr);
+
+    fprintf(file, "\\documentclass{article}\n"
+                  "\\begin{document}\n"
+                  "$");
+
+    latexDumpSubtree(file, tree->root);
+
+
+    fprintf(file, "$\n"
+                  "\\end{document}");
+
+    fclose(file);
+
+    char dir[128] = {};
+    _getcwd(dir, sizeof(dir));
+
+    char cmd[256] = {};
+    snprintf(cmd, sizeof(cmd), "pdflatex --output-directory=%s/%s --job-name=tree%u %s", dir, pdfDir, count, filename);
+    printf("cmd = '%s'\n", cmd);
+    system(cmd);
+
+    snprintf(cmd, sizeof(cmd), "start %s/tree%u.pdf", pdfDir, count);
+    printf("cmd = '%s'\n", cmd);
+    system(cmd);
+}
+
+#define IS_ADD         op == OP_ADD
+#define IS_SUB         op == OP_SUB
+#define IS_MUL         op == OP_MUL
+#define IS_DIV         op == OP_DIV
+#define IS_POW         op == OP_POW
+#define IS_EXP         op == OP_EXP
+#define IS_ADD_SUB_MUL (op == OP_ADD || op == OP_SUB || op == OP_MUL)
+
+bool skipFirstParantheses(ETNode* operationNode)
+{
+    assert(operationNode       != nullptr);
+    assert(operationNode->type == TYPE_OP);
+    assert(operationNode->left != nullptr);
+
+    Operation op = operationNode->data.op;
+
+    return operationNode->left->type != TYPE_OP  || 
+           IS_ADD                                || 
+           IS_SUB                                ||
+           (IS_MUL && operationNode->left->type == TYPE_OP && isOperationUnary(operationNode->left->data.op));
+}
+
+bool skipSecondParantheses(ETNode* operationNode)
+{
+    assert(operationNode        != nullptr);
+    assert(operationNode->type  == TYPE_OP);
+    assert(operationNode->right != nullptr);
+
+    Operation op = operationNode->data.op;
+
+    return operationNode->right->type != TYPE_OP  || 
+           IS_POW                                 || 
+           IS_EXP                                 || 
+           (IS_ADD_SUB_MUL && operationNode->right->type == TYPE_OP && isOperationUnary(operationNode->right->data.op));
+}
+
+#undef IS_ADD        
+#undef IS_SUB        
+#undef IS_MUL        
+#undef IS_DIV        
+#undef IS_POW        
+#undef IS_EXP        
+#undef IS_ADD_SUB_MUL
+
+void latexDumpSubtree(FILE* file, ETNode* node)
+{
+    assert(file != nullptr);
+    if (node == nullptr) { return; }
+
+    if (node->type == TYPE_OP && !isOperationUnary(node->data.op))
+    {
+        if (node->data.op == OP_DIV)
+        {
+            fprintf(file, "\\frac{");
+            latexDumpSubtree(file, node->left);
+
+            fprintf(file, "}{");
+            latexDumpSubtree(file, node->right);
+            fprintf(file, "}");
+
+            return;
+        }   
+
+        bool skipFirst = skipFirstParantheses(node);
+
+        fprintf(file, "{");
+        if (!skipFirst) { fprintf(file, "("); }
+        
+        latexDumpSubtree(file, node->left);
+
+        if (!skipFirst) { fprintf(file, ")"); }
+        fprintf(file, "} ");
+    }
+
+    if (node->type == TYPE_NUMBER)
+    {
+        const char* constant = getConstantName(node->data.number);
+
+        if (constant == nullptr) 
+        { 
+            fprintf(file, "%lg", node->data.number);
+        }
+        else
+        {
+            if (strlen(constant) > 1) { fprintf(file, "\\%s", constant); }
+            else                      { fprintf(file, "%s",   constant); }
+        }
+    }  
+    else if (node->type == TYPE_VAR)
+    {
+        fprintf(file, "%c", node->data.var);
+    }
+    else if (node->type == TYPE_OP)
+    {
+        bool skipSecond = skipSecondParantheses(node);
+
+        switch (node->data.op)
+        {
+            case OP_ADD: { fprintf(file, " + ");      break; }
+            case OP_SUB: { fprintf(file, " - ");      break; }
+            case OP_MUL: { fprintf(file, " \\cdot "); break; }
+            case OP_POW: { fprintf(file, " ^ ");      break; }
+            case OP_LOG: { fprintf(file, " \\ln");    break; }
+            case OP_EXP: { fprintf(file, "{e}^");     break; }
+            case OP_SIN: { fprintf(file, "\\sin");    break; } 
+            case OP_COS: { fprintf(file, "\\cos");    break; }
+            case OP_TAN: { fprintf(file, "\\tan");    break; }
+
+            default:     { break; }
+        }
+
+        fprintf(file, "{");
+        if (!skipSecond) { fprintf(file, "("); }
+
+        latexDumpSubtree(file, node->right);
+        
+        if (!skipSecond) { fprintf(file, ")"); }
+        fprintf(file, "}");
+    }
+    else
+    {
+        fprintf(file, "ERROR: invalid node type");
+    }
 }
