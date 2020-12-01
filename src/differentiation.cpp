@@ -7,12 +7,6 @@
 #define UNARY_OP(operation, arg) *newNode(TYPE_OP, { .op = OP_##operation }, NULL,             (ETNode*) &(arg))
 #define BINARY_OP(operation)     *newNode(TYPE_OP, { .op = OP_##operation }, (ETNode*) &tree1, (ETNode*) &tree2)
 
-// #define ADD(left, right) BINARY_OP(ADD)
-// #define SUB(left, right) BINARY_OP(SUB)
-// #define MUL(left, right) BINARY_OP(MUL)
-// #define DIV(left, right) BINARY_OP(DIV)
-// #define POW(left, right) BINARY_OP(POW)
-
 #define LOG(arg) UNARY_OP(LOG, arg)
 #define EXP(arg) UNARY_OP(EXP, arg)
 
@@ -61,7 +55,6 @@ ETNode* differentiate(ETNode* root)
 
     Operation operation = isTypeOp(root) ? root->data.op : OP_INVALID;
 
-    // TODO: make at least a bit more eye-pleasing
     if (root->type == TYPE_NUMBER || (isTypeOp(root) && !hasVariable(root, 'x')))
     {
         return newNode(TYPE_NUMBER, { 0.0 }, nullptr, nullptr);

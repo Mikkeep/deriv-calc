@@ -8,17 +8,12 @@ void simplifyNode      (ETNode* node, ETNode* child);
 bool simplifyOps       (ETNode* root);
 bool precalcConstExprs (ETNode* root);
 
-//TODO: DELETE!!!
-ExprTree* DERivativeTRee = nullptr;
-
 void simplifyTree(ExprTree* tree)
 {
     assert(tree       != nullptr);
     assert(tree->root != nullptr);
 
-    DERivativeTRee = tree;
-
-    while (precalcConstExprs(tree->root) || simplifyOps(tree->root)) /*graphDump(DERivativeTRee)*/;
+    while (precalcConstExprs(tree->root) || simplifyOps(tree->root));
 }
 
 void simplifyNode(ETNode* node, NodeType newType, ETNodeData data)
@@ -125,7 +120,6 @@ bool precalcConstExprs(ETNode* root)
 
     if (right->type == TYPE_NUMBER)
     {
-        // TODO: process cases like 6/2 and 2/3 differently!
         if ((operation == OP_ADD || operation == OP_SUB || operation == OP_MUL || operation == OP_DIV) && 
             isTypeNumber(left) && isTypeNumber(right) &&
             !isConstant(left->data.number) && !isConstant(right->data.number))
