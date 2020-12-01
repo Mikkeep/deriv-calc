@@ -33,7 +33,9 @@ int main(int argc, char* argv[])
     derivTree.root = differentiate(exprTree.root);
     simplifyTree(&derivTree);
 
-    latexDump(&derivTree);
+    // graphDump(&derivTree);
+    // latexDump(&derivTree);
+    latexDump(&exprTree);
 
     destroy(&exprTree);
     destroy(&derivTree);

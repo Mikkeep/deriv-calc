@@ -1,5 +1,5 @@
 #include <assert.h>
-#include <assert.h>
+#include <stdio.h>
 #include "expression_simplifier.h"
 #include "utilib.h"
 
@@ -118,10 +118,13 @@ bool precalcConstExprs(ETNode* root)
 
     bool isChanged = precalcConstExprs(root->left) || precalcConstExprs(root->right);
 
-    if (isTypeOp(root) && right->type == TYPE_NUMBER)
-    {
-        Operation operation = root->data.op;
+    if (!isTypeOp(root)) { return isChanged; } 
 
+    Operation operation = root->data.op;
+    double    value     = GARBAGE_VALUE_FOR_PRECALC; 
+
+    if (right->type == TYPE_NUMBER)
+    {
         // TODO: process cases like 6/2 and 2/3 differently!
         if ((operation == OP_ADD || operation == OP_SUB || operation == OP_MUL || operation == OP_DIV) && 
             isTypeNumber(left) && isTypeNumber(right) &&
@@ -132,8 +135,6 @@ bool precalcConstExprs(ETNode* root)
         }
         else
         {
-            double value = GARBAGE_VALUE_FOR_PRECALC; 
-
             if (isOperationUnary(operation) && isTypeNumber(root->right))
             {
                 value = evaluateUnary(operation, root->right->data.number);
@@ -142,14 +143,27 @@ bool precalcConstExprs(ETNode* root)
             {
                 value = evaluateBinary(operation, root->left->data.number, root->right->data.number);
             }
-
-            if (value != GARBAGE_VALUE_FOR_PRECALC)
-            {
-                if (dcompare(value,  0.0) == 0) { simplifyNode(root, TYPE_NUMBER, { 0.0}); return true; }
-                if (dcompare(value,  1.0) == 0) { simplifyNode(root, TYPE_NUMBER, { 1.0}); return true; }
-                if (dcompare(value, -1.0) == 0) { simplifyNode(root, TYPE_NUMBER, {-1.0}); return true; }
-            }
         }
+    }
+    else if (isTrigOp(operation) && right->type == TYPE_OP && right->right->type == TYPE_NUMBER)
+    {
+        if (isOperationUnary(right->data.op)) 
+        { 
+            value = evaluateUnary(right->data.op, right->right->data.number); 
+        }
+        else if (right->left->type == TYPE_NUMBER)
+        {
+            value = evaluateBinary(right->data.op, right->left->data.number, right->right->data.number); 
+        }
+
+        value = evaluateUnary(operation, value);
+    }
+
+    if (dcompare(value,  GARBAGE_VALUE_FOR_PRECALC) != 0)
+    {
+        if (dcompare(value,  0.0) == 0) { simplifyNode(root, TYPE_NUMBER, { 0.0}); return true; }
+        if (dcompare(value,  1.0) == 0) { simplifyNode(root, TYPE_NUMBER, { 1.0}); return true; }
+        if (dcompare(value, -1.0) == 0) { simplifyNode(root, TYPE_NUMBER, {-1.0}); return true; }
     }
 
     return isChanged;

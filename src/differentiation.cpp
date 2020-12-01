@@ -76,28 +76,14 @@ ETNode* differentiate(ETNode* root)
 
     switch (operation)
     {
-        // case OP_ADD: return ADD(dL, dR);
-        // case OP_SUB: return SUB(dL, dR);
-
-        // // case OP_MUL: return newNode(TYPE_OP, { OP_ADD }, newNode(TYPE_OP, { OP_MUL }, differentiate(root->left), copyTree(root->right)), 
-        // //                                                  newNode(TYPE_OP, { OP_MUL }, copyTree(root->left), differentiate(root->right)));
-
-        // case OP_MUL: return ADD(MUL(dL, R), MUL(L, dR));
-        // case OP_DIV: return DIV(SUB(MULL(dL, R), MULL(L, dR)), POW(R, NUM(2)));
-
-        // case OP_MUL: return newNode(TYPE_OP, { OP_ADD }, newNode(TYPE_OP, { OP_MUL }, differentiate(root->left), copyTree(root->right)), 
-        //                                                  newNode(TYPE_OP, { OP_MUL }, copyTree(root->left), differentiate(root->right)));
-
         case OP_ADD: RETURN(dL + dR);
         case OP_SUB: RETURN(dL - dR);
 
         case OP_MUL: RETURN((dL * R) + (L * dR));
         case OP_DIV: RETURN((dL * R - L * dR) / (R ^ NUM(2)));
 
-        case OP_POW: if (!hasVariable(root->right, 'x')) 
-                         RETURN(R * (L ^ (R - NUM(1))) * dL);
-                     else                        
-                         return differentiate(&EXP(R * LOG(L)));
+        case OP_POW: if (!hasVariable(root->right, 'x')) { RETURN(R * (L ^ (R - NUM(1))) * dL);            }
+                     else                                { RETURN((L ^ R) * (dR * LOG(L) + (R / L) * dL)); } 
 
         case OP_LOG: RETURN((NUM(1) / R) * dR);
         case OP_EXP: RETURN(EXP(R) * dR);    

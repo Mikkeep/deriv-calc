@@ -1,9 +1,11 @@
 Options = -Wall -Wpedantic
 
-#    (sin (      5)) + ( ( x  ) * (10     )   )    
+# (sin (      5)) + ( ( x  ) * (10     )   )    
 # (((x) - (1)) ^ (3)) * (((x) - (2)) ^ (-2))
 # (sin(((pi) * ((n) + (1))) / (2))) * ((e) ^ (x))    
 # ((x) - (20)) * (((9) * (x)) + (1))
+# ((((3)*(tan(x)))+(cos(sin(exp(x)))))*((10)-((2)^(log(x)))))/((x)^(2))
+# (sin((3) * ((pi) / (2)))) * (cos(((pi) * (x)) ^ (e)))
 
 SrcDir = src
 BinDir = bin
@@ -12,10 +14,6 @@ LibDir = libs
 
 LIBS = $(wildcard $(LibDir)/*.a)
 DEPS = $(wildcard $(SrcDir)/*.h) $(wildcard $(LibDir)/*.h)
-
-# LIBS = $(LibDir)/file_manager.a $(LibDir)/log_generator.a
-# DEPS = $(wildcard $(SrcDir)/*.h)$(SrcDir)/math_syntax.h $(SrcDir)/expression_tree.h $(SrcDir)/utilib.h $(SrcDir)/expression_loader.h $(SrcDir)/expression_simplifier.h $(SrcDir)/differentiation.h $(LibDir)/file_manager.h $(LibDir)/log_generator.h 
-
 OBJS = $(Intermediates)/main.o $(Intermediates)/math_syntax.o $(Intermediates)/expression_tree.o $(Intermediates)/expression_loader.o $(Intermediates)/expression_simplifier.o $(Intermediates)/differentiation.o
 
 $(BinDir)/deriv_calc.exe: $(OBJS) $(LIBS) $(DEPS)
