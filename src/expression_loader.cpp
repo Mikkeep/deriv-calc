@@ -6,14 +6,45 @@
 #include "../libs/file_manager.h"
 #include "expression_loader.h"
 
-const char*  EMPTY_SPACE_DELIMS = " \t";
+enum ParseError
+{
+    PARSE_NO_ERROR,
+    PARSE_UNFINISHED_EXPRESSION,
+    PARSE_UNKNOWN_OPERATION,
+    PARSE_NO_OPENING_BRACKET,
+    PARSE_NO_CLOSING_BRACKET,
+    PARSE_NO_NUMBER_FOUND
+};
 
-bool      parseExpression  (ETNode* root, char* expr, size_t exprLength);
-char*     skipDelims       (char* str);
-int       processNumber    (const char* token, double* number);
-Operation processOperation (char* token);
-int       processConstant  (char* token, double* constant);
-bool      isVariable       (char token);
+struct Parser
+{
+    const char* expression;
+    size_t      ofs;
+    ParseError  status;
+};
+
+bool        loadExpression  (ExprTree* tree, const char* filename);
+
+ParseError  parseExpression (ExprTree* tree, const char* expression);
+void        requireSymbol   (Parser* parser, char symbol, ParseError error);
+ETNode*     getExpression   (Parser* parser);
+ETNode*     getTerm         (Parser* parser);
+ETNode*     getPower        (Parser* parser);
+ETNode*     getFactor       (Parser* parser);
+ETNode*     getUnaryOp      (Parser* parser);
+
+ETNode*     getNumber       (Parser* parser);
+ETNode*     getConstant     (Parser* parser);
+ETNode*     getVariable     (Parser* parser);
+
+void        skipSpaces      (Parser* parser);
+
+void        incrOffset      (Parser* parser, size_t delta);
+char        curSymbol       (Parser* parser);
+const char* curPosition     (Parser* parser);
+
+const char* errorString     (ParseError error);
+void        syntaxError     (Parser* parser, ParseError error);
 
 bool loadExpression(ExprTree* tree, const char* filename)
 {
@@ -54,9 +85,7 @@ bool loadExpression(ExprTree* tree, const char* filename)
 
     exprBuffer[exprLength] = '\0';
 
-    tree->root = newNode();
-    
-    if (!parseExpression(tree->root, exprBuffer, exprLength))
+    if (parseExpression(tree, exprBuffer) != PARSE_NO_ERROR)
     {
         LG_LogMessage("Expression tree hasn't been constructed correctly.", LG_STYLE_CLASS_ERROR, filename);
 
@@ -72,155 +101,280 @@ bool loadExpression(ExprTree* tree, const char* filename)
     return true;
 }
 
-#define GO_TO_CHILD(side) node->side         = newNode();  \
-                          node->side->parent = node;       \
-                          node               = node->side; 
-
-bool parseExpression(ETNode* root, char* expr, size_t exprLength)
+ParseError parseExpression(ExprTree* tree, const char* expression)
 {
-    assert(expr       != nullptr);
-    assert(root       != nullptr);
-    assert(exprLength >  0);
+    assert(tree       != nullptr);
+    assert(expression != nullptr);
 
-    size_t    numberLength   = 0;
-    double    number         = 0;
-    int       constantLength = 0;
-    double    constant       = 0;
-    Operation operation      = OP_INVALID;
+    Parser parser = { expression, 0, PARSE_NO_ERROR };
 
-    char*   curr = expr;
-    ETNode* node = root;
+    ETNode* root = getExpression(&parser);
+    requireSymbol(&parser, '\0', PARSE_UNFINISHED_EXPRESSION);
 
-    while ((size_t) (curr - expr) < exprLength)
+    tree->root = root;
+
+    return parser.status;
+}
+
+void requireSymbol(Parser* parser, char symbol, ParseError error)
+{
+    assert(parser != nullptr);
+
+    if (curSymbol(parser) != symbol) { syntaxError(parser, error); }
+}
+
+ETNode* getExpression(Parser* parser)
+{
+    assert(parser != nullptr);
+
+    ETNode* value1 = getTerm(parser);
+
+    while (curSymbol(parser) == '+' || curSymbol(parser) == '-')
     {
-        curr = skipDelims(curr);
+        char operation = curSymbol(parser);
+        incrOffset(parser, 1);
 
-        if (*curr == '(')
-        {
-            if (node->left  == nullptr && node->data.op < UNARY_OPERATIONS_START) 
-            { 
-                GO_TO_CHILD(left); 
-            }
-            else if (node->right == nullptr) 
-            { 
-                GO_TO_CHILD(right); 
-            }
-            else
-            {
-                printf("Syntax error: opening bracket after both operands been found.\n");
-                return false;
-            }
+        ETNode* value2 = getTerm(parser);
 
-            curr++;
-        }
-        else if (*curr == ')')
-        {
-            node = node->parent;
-            curr++;
-        }
-        else if ((numberLength = processNumber(curr, &number)) > 0)
-        {
-            setData(node, number);
-            curr += numberLength;
-        }
-        else if ((operation = processOperation(curr)) != OP_INVALID)
-        {
-            setData(node, operation);
-            curr += strlen(OPERATIONS[operation]);
-        }
-        else if ((constantLength = processConstant(curr, &constant)) > 0)
-        {
-            setData(node, constant);
-            curr += constantLength;
-        }
-        else if (isVariable(*curr) && strchr(" \t()", *(curr + 1)) != NULL)
-        {
-            setData(node, *curr);
-            curr++;
-        }
-        else
-        {
-            printf("Syntax error: invalid symbol ->'[%c]%s'.\n", *curr, curr + 1);
-            return false;
-        }
-
-        curr = skipDelims(curr);
+        if (operation == '+') { value1 = newNode(TYPE_OP, { .op = OP_ADD }, value1, value2); }
+        else                  { value1 = newNode(TYPE_OP, { .op = OP_SUB }, value1, value2); }
     }
 
-    if (node != root)
+    return value1;
+}
+
+ETNode* getTerm(Parser* parser)
+{
+    assert(parser != nullptr);
+
+    ETNode* value1 = getPower(parser);
+
+    while (curSymbol(parser) == '*' || curSymbol(parser) == '/')
     {
-        printf("Syntax error: ')' not found.\n");
-        return false;
+        char operation = curSymbol(parser);
+        incrOffset(parser, 1);
+
+        ETNode* value2 = getPower(parser);
+
+        if (operation == '*') { value1 = newNode(TYPE_OP, { .op = OP_MUL }, value1, value2); }
+        else                  { value1 = newNode(TYPE_OP, { .op = OP_DIV }, value1, value2); }
     }
 
-    return true;
+    return value1;
 }
 
-char* skipDelims(char* str)
+ETNode* getPower(Parser* parser)
 {
-    assert(str != nullptr);
+    assert(parser != nullptr);
 
-    return str + strspn(str, EMPTY_SPACE_DELIMS);
-}
+    ETNode* value1 = getFactor(parser);
 
-int processNumber(const char* token, double* number)
-{
-    assert(token  != nullptr);
-    assert(number != nullptr);
-
-    int numberLength = 0;
-
-    if (sscanf(token, "%lg%n", number, &numberLength) != 1) { return 0; }
-
-    return numberLength;
-}
-
-Operation processOperation(char* token)
-{
-    assert(token != nullptr);
-
-    char* operationEnd = token + strcspn(token, " \t()"); 
-    char  prevSymb     = *operationEnd;
-
-    *operationEnd = '\0';
-
-    Operation operation = OP_INVALID; 
-
-    for (size_t i = 0; i < OPERATIONS_COUNT; i++)
+    while (curSymbol(parser) == '^')
     {
-        if (strcmp(token, OPERATIONS[i]) == 0)
+        incrOffset(parser, 1);
+
+        value1 = newNode(TYPE_OP, { .op = OP_POW }, value1, getFactor(parser));
+    }
+
+    return value1;
+}
+
+ETNode* getFactor(Parser* parser)
+{
+    assert(parser != nullptr);
+
+    ETNode* value = 0;
+
+    if (curSymbol(parser) == '(')
+    {
+        incrOffset(parser, 1);
+
+        value = getExpression(parser);
+        requireSymbol(parser, ')', PARSE_NO_CLOSING_BRACKET);
+
+        incrOffset(parser, 1);
+    }
+    else
+    {
+        value = getNumber(parser);
+
+        if (value == nullptr) { value = getConstant(parser); }
+        if (value == nullptr) { value = getVariable(parser); }
+        if (value == nullptr) { value = getUnaryOp(parser);  }
+    }
+
+    return value;
+}
+
+ETNode* getUnaryOp(Parser* parser)
+{
+    assert(parser != nullptr);
+
+    bool        valid     = false;
+    const char* curPos    = curPosition(parser);
+    Operation   operation = OP_INVALID;
+
+    for (size_t i = UNARY_OPERATIONS_START; i < OPERATIONS_COUNT; i++)
+    {   
+        size_t length = strlen(OPERATIONS[i]);
+
+        if (strncmp(curPos, OPERATIONS[i], length) == 0)
         {
             operation = (Operation) i;
+            valid     = true;
 
-            break;
+            incrOffset(parser, length);
+            continue;
         }
     }
 
-    *operationEnd = prevSymb;
+    if (!valid) { syntaxError(parser, PARSE_UNKNOWN_OPERATION); }
 
-    return operation;
+    ETNode* value = getFactor(parser);
+
+    switch (operation)
+    {
+        case OP_LOG: 
+            value = newNode(TYPE_OP, { .op = OP_LOG }, nullptr, value);
+            break;
+
+        case OP_EXP: 
+            value = newNode(TYPE_OP, { .op = OP_EXP }, nullptr, value);
+            break;
+ 
+        case OP_SIN: 
+            value = newNode(TYPE_OP, { .op = OP_SIN }, nullptr, value);
+            break;
+
+        case OP_COS: 
+            value = newNode(TYPE_OP, { .op = OP_COS }, nullptr, value);
+            break;
+
+        case OP_TAN:
+            value = newNode(TYPE_OP, { .op = OP_TAN }, nullptr, value);
+            break;
+    }
+
+    return value;
 }
 
-int processConstant(char* token, double* constant)
+ETNode* getNumber(Parser* parser)
 {
-    assert(token != nullptr);
+    assert(parser != nullptr);
 
-    char* constantEnd = token + strcspn(token, " \t()"); 
-    char  prevSymb    = *constantEnd;
+    char*  numberEnd = nullptr;
+    double value     = strtod(curPosition(parser), &numberEnd);
 
-    *constantEnd = '\0';
+    if (numberEnd == curPosition(parser)) { return nullptr; }
 
-    int length = 0; 
+    incrOffset(parser, numberEnd - curPosition(parser));
 
-    if      (strcmp(token, "pi") == 0) { length = 2; *constant = PI_CONST; }
-    else if (strcmp(token, "e")  == 0) { length = 1; *constant = E_CONST;  }
-
-    *constantEnd = prevSymb;
-
-    return length;
+    return newNode(TYPE_NUMBER, { .number = value }, nullptr, nullptr);
 }
 
-bool isVariable(char token)
+ETNode* getConstant(Parser* parser)
 {
-    return isalpha(token) && token != 'e';
+    assert(parser != nullptr);
+
+    size_t length = 0;
+
+    for (size_t i = 0; i < CONSTANTS_COUNT; i++)
+    {
+        length = CONSTANTS[i].nameLength;
+
+        if (strncmp(curPosition(parser), CONSTANTS[i].name, length) == 0)
+        {
+            incrOffset(parser, length);
+
+            return newNode(TYPE_NUMBER, { .number = CONSTANTS[i].value }, nullptr, nullptr);
+        }
+    }
+
+    return nullptr;
+}
+
+ETNode* getVariable(Parser* parser)
+{
+    assert(parser != nullptr);
+
+    char symbol = curSymbol(parser);
+    if (isVariable(symbol))
+    {
+        char nextSymbol = curPosition(parser)[1];
+        if (nextSymbol != '\0' && isalpha(nextSymbol)) { return nullptr; }
+
+        incrOffset(parser, 1);
+
+        return newNode(TYPE_VAR, { .var = symbol }, nullptr, nullptr);
+    }
+
+    return nullptr;
+}
+
+void skipSpaces(Parser* parser)
+{
+    assert(parser             != nullptr);
+    assert(parser->expression != nullptr);
+
+    parser->ofs += strspn(curPosition(parser), " \t");
+}
+
+void incrOffset(Parser* parser, size_t delta)
+{
+    assert(parser             != nullptr);
+    assert(parser->expression != nullptr);
+
+    parser->ofs += delta;
+
+    skipSpaces(parser);
+}
+
+char curSymbol(Parser* parser)
+{
+    assert(parser             != nullptr);
+    assert(parser->expression != nullptr);
+
+    return *curPosition(parser);
+}
+
+const char* curPosition(Parser* parser)
+{
+    assert(parser             != nullptr);
+    assert(parser->expression != nullptr);
+
+    return &(parser->expression[parser->ofs]);
+}
+
+const char* errorString(ParseError error)
+{
+    switch (error)
+    {
+        case PARSE_NO_ERROR:              return "no error";
+        case PARSE_UNFINISHED_EXPRESSION: return "unfinished expression";
+        case PARSE_UNKNOWN_OPERATION:     return "unknown operation";
+        case PARSE_NO_OPENING_BRACKET:    return "no opening bracket found";
+        case PARSE_NO_CLOSING_BRACKET:    return "no closing bracket found";
+        case PARSE_NO_NUMBER_FOUND:       return "expected a number";
+    }
+
+    return nullptr;
+}
+
+void syntaxError(Parser* parser, ParseError error)
+{
+    assert(parser != nullptr);
+
+    if (error == PARSE_NO_ERROR) { return; }
+
+    parser->status = error;
+
+    printf("SYNTAX ERROR: %s\n", errorString(error));
+    printf("%s\n", parser->expression);
+
+    for (size_t i = 0; i < parser->ofs; i++)
+    {
+        putchar(' ');
+    }
+
+    printf("^\n");
 }

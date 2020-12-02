@@ -13,7 +13,8 @@ void simplifyTree(ExprTree* tree)
     assert(tree       != nullptr);
     assert(tree->root != nullptr);
 
-    while (precalcConstExprs(tree->root) || simplifyOps(tree->root));
+    while (precalcConstExprs(tree->root) || simplifyOps(tree->root))
+        ;
 }
 
 void simplifyNode(ETNode* node, NodeType newType, ETNodeData data)

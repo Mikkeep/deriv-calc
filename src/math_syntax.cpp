@@ -1,4 +1,6 @@
 #include <assert.h>
+#include <ctype.h>
+#include <string.h>
 #include "math_syntax.h"
 #include "utilib.h"
 
@@ -8,16 +10,28 @@
 
 bool isConstant(double value)
 {
-    return dcompare(value, E_CONST)  == 0 || 
-           dcompare(value, PI_CONST) == 0;
+    for (size_t i = 0; i < CONSTANTS_COUNT; i++)
+    {
+        if (dcompare(value, CONSTANTS[i].value) == 0) 
+        { 
+            return true; 
+        }
+    }
+
+    return false;
 }
 
 const char* getConstantName(double constant)
 {
-    if      (dcompare(constant, E_CONST)  == 0) { return "e"; }   
-    else if (dcompare(constant, PI_CONST) == 0) { return "pi"; }  
+    for (size_t i = 0; i < CONSTANTS_COUNT; i++)
+    {
+        if (dcompare(constant, CONSTANTS[i].value) == 0) 
+        { 
+            return CONSTANTS[i].name; 
+        }
+    }
 
-    return nullptr; 
+    return nullptr;
 }
 
 //! @}
@@ -77,6 +91,26 @@ double evaluateBinary(Operation operation, double arg1, double arg2)
     }
 
     return NAN;
+}
+
+//! @}
+//-----------------------------------------------------------------------------
+
+//----------------------------------------------------------------------------- 
+//! @addtogroup MATH_VARIABLES
+//! @{
+
+bool isVariable(char symbol)
+{
+    for (size_t i = 0; i < CONSTANTS_COUNT; i++)
+    {
+        if (CONSTANTS[i].nameLength == 1 && CONSTANTS[i].name[0] == symbol)
+        {
+            return false;
+        }
+    }
+
+    return isalpha(symbol) && strchr(INVALID_VARIABLE_SYMBOLS, symbol) == nullptr;
 }
 
 //! @}

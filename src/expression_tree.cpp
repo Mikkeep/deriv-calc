@@ -417,12 +417,10 @@ void latexDump(ExprTree* tree)
     _getcwd(dir, sizeof(dir));
 
     char cmd[256] = {};
-    snprintf(cmd, sizeof(cmd), "pdflatex --output-directory=%s/%s --job-name=tree%u %s", dir, pdfDir, count, filename);
-    printf("cmd = '%s'\n", cmd);
+    snprintf(cmd, sizeof(cmd), "pdflatex --output-directory=%s/%s --job-name=tree%u %s > nul", dir, pdfDir, count, filename);
     system(cmd);
 
     snprintf(cmd, sizeof(cmd), "start %s/tree%u.pdf", pdfDir, count);
-    printf("cmd = '%s'\n", cmd);
     system(cmd);
 }
 

@@ -7,8 +7,21 @@
 //! @addtogroup MATH_CONSTANTS
 //! @{
 
+struct Constant
+{
+    const char*  name;
+    const size_t nameLength;
+    const double value;
+};
+
 static const double PI_CONST = acos(-1);
 static const double E_CONST  = exp(1);
+
+static const size_t   CONSTANTS_COUNT = 2;
+static const Constant CONSTANTS[CONSTANTS_COUNT] = { 
+                                                     { "pi", 2, PI_CONST },
+                                                     { "e",  1, E_CONST  } 
+                                                   };
 
 bool        isConstant      (double value);  
 const char* getConstantName (double constant);
@@ -31,10 +44,11 @@ enum Operation
 
     /* Unary operations */
     OP_LOG, OP_EXP, 
-    OP_SIN, OP_COS, OP_TAN  
+    OP_SIN, OP_COS, OP_TAN,
+
+    OPERATIONS_COUNT
 };
 
-static const size_t OPERATIONS_COUNT             = 10;
 static const int    UNARY_OPERATIONS_START       = OP_LOG;
 static const char*  OPERATIONS[OPERATIONS_COUNT] = 
                         { 
@@ -50,6 +64,17 @@ bool   isTrigOp         (Operation operation);
 
 double evaluateUnary    (Operation operation, double arg);
 double evaluateBinary   (Operation operation, double arg1, double arg2);
+
+//! @}
+//-----------------------------------------------------------------------------
+
+//----------------------------------------------------------------------------- 
+//! @defgroup MATH_VARIABLES Variables specification
+//! @addtogroup MATH_VARIABLES
+//! @{
+
+static const char* INVALID_VARIABLE_SYMBOLS = "e";
+bool isVariable (char symbol);
 
 //! @}
 //-----------------------------------------------------------------------------

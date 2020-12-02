@@ -1,6 +1,16 @@
+//-----------------------------------------------------------------------------
+//! THANKS TO
+//!
+//! Mikhail Shishatsky
+//!     - for being the best mentor of all time
+//-----------------------------------------------------------------------------
+
 #include <assert.h>
+#include <ctype.h>
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #define UTB_DEFINITIONS
 #include "utilib.h"
@@ -33,12 +43,14 @@ int main(int argc, char* argv[])
     derivTree.root = differentiate(exprTree.root);
     simplifyTree(&derivTree);
 
-    // graphDump(&derivTree);
-    // latexDump(&derivTree);
     latexDump(&exprTree);
+    graphDump(&derivTree);
+    latexDump(&derivTree);
 
     destroy(&exprTree);
     destroy(&derivTree);
 
     LG_Close();
+
+    return 0;
 }
