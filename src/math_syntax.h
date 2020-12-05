@@ -30,6 +30,17 @@ const char* getConstantName (double constant);
 //-----------------------------------------------------------------------------
 
 //----------------------------------------------------------------------------- 
+//! @defgroup MATH_VARIABLES Variables specification
+//! @addtogroup MATH_VARIABLES
+//! @{
+
+static const char* INVALID_VARIABLE_SYMBOLS = "e";
+bool isVariable (char symbol);
+
+//! @}
+//-----------------------------------------------------------------------------
+
+//----------------------------------------------------------------------------- 
 //! @defgroup MATH_OPERATIONS Supporting operations
 //! @addtogroup MATH_OPERATIONS
 //! @{
@@ -61,20 +72,8 @@ static const char*  OPERATIONS[OPERATIONS_COUNT] =
 bool   isOperationUnary (Operation operation);
 bool   isArithmeticOp   (Operation operation);  
 bool   isTrigOp         (Operation operation);
-
 double evaluateUnary    (Operation operation, double arg);
 double evaluateBinary   (Operation operation, double arg1, double arg2);
-
-//! @}
-//-----------------------------------------------------------------------------
-
-//----------------------------------------------------------------------------- 
-//! @defgroup MATH_VARIABLES Variables specification
-//! @addtogroup MATH_VARIABLES
-//! @{
-
-static const char* INVALID_VARIABLE_SYMBOLS = "e";
-bool isVariable (char symbol);
 
 //! @}
 //-----------------------------------------------------------------------------

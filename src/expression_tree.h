@@ -36,6 +36,24 @@ struct ExprTree
 
 static const bool ET_TRAVERSE_RUN = true;
 
+#define UNARY_OP(operation, arg) *newNode(TYPE_OP, { .op = OP_##operation }, NULL,             (ETNode*) &(arg))
+#define BINARY_OP(operation)     *newNode(TYPE_OP, { .op = OP_##operation }, (ETNode*) &tree1, (ETNode*) &tree2)
+
+#define LOG(arg) UNARY_OP(LOG, arg)
+#define EXP(arg) UNARY_OP(EXP, arg)
+#define SIN(arg) UNARY_OP(SIN, arg)
+#define COS(arg) UNARY_OP(COS, arg)
+#define TAN(arg) UNARY_OP(TAN, arg)
+
+#define NUM(num)      (*newNode(TYPE_NUMBER, { .number = num      }, nullptr, nullptr))
+#define VAR(variable) (*newNode(TYPE_VAR,    { .var    = variable }, nullptr, nullptr))
+
+ETNode&   operator +        (const ETNode& tree1, const ETNode& tree2);
+ETNode&   operator -        (const ETNode& tree1, const ETNode& tree2);
+ETNode&   operator *        (const ETNode& tree1, const ETNode& tree2);
+ETNode&   operator /        (const ETNode& tree1, const ETNode& tree2);
+ETNode&   operator ^        (const ETNode& tree1, const ETNode& tree2);
+
 ExprTree* construct         (ExprTree* tree);
 void      destroy           (ExprTree* tree);
 void      destroySubtree    (ETNode* root);
@@ -59,6 +77,8 @@ bool      isTypeNumber      (const ETNode* node);
 bool      isTypeVar         (const ETNode* node);
 bool      isTypeOp          (const ETNode* node);
 
+double    evaluateSubtree   (ETNode* root);
+void      substitute        (ETNode* root, char variable, double value);
 bool      hasVariable       (ETNode* root, char variable);
 
 void      setData           (ETNode* node, NodeType type, ETNodeData data);

@@ -19,6 +19,7 @@
 #include "expression_loader.h"
 #include "expression_simplifier.h"
 #include "differentiation.h"
+#include "taylor_expansion.h"
 
 int main(int argc, char* argv[])
 {
@@ -37,17 +38,26 @@ int main(int argc, char* argv[])
         return -1; 
     }
 
+    ExprTree expansion = {};
+    construct(&expansion);
+
+    expansion.root = taylorExpansion(exprTree.root, 0, 6);
+    simplifyTree(&expansion);
+
+    graphDump(&expansion);
+    latexDump(&expansion);
+
     ExprTree derivTree = {};
     construct(&derivTree);
 
     derivTree.root = differentiate(exprTree.root);
     simplifyTree(&derivTree);
 
-    latexDump(&exprTree);
-    graphDump(&derivTree);
+    // graphDump(&derivTree);
     latexDump(&derivTree);
 
     destroy(&exprTree);
+    destroy(&expansion);
     destroy(&derivTree);
 
     LG_Close();

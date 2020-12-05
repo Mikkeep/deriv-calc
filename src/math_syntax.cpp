@@ -38,6 +38,26 @@ const char* getConstantName(double constant)
 //-----------------------------------------------------------------------------
 
 //----------------------------------------------------------------------------- 
+//! @addtogroup MATH_VARIABLES
+//! @{
+
+bool isVariable(char symbol)
+{
+    for (size_t i = 0; i < CONSTANTS_COUNT; i++)
+    {
+        if (CONSTANTS[i].nameLength == 1 && CONSTANTS[i].name[0] == symbol)
+        {
+            return false;
+        }
+    }
+
+    return isalpha(symbol) && strchr(INVALID_VARIABLE_SYMBOLS, symbol) == nullptr;
+}
+
+//! @}
+//-----------------------------------------------------------------------------
+
+//----------------------------------------------------------------------------- 
 //! @addtogroup MATH_OPERATIONS
 //! @{
 
@@ -91,26 +111,6 @@ double evaluateBinary(Operation operation, double arg1, double arg2)
     }
 
     return NAN;
-}
-
-//! @}
-//-----------------------------------------------------------------------------
-
-//----------------------------------------------------------------------------- 
-//! @addtogroup MATH_VARIABLES
-//! @{
-
-bool isVariable(char symbol)
-{
-    for (size_t i = 0; i < CONSTANTS_COUNT; i++)
-    {
-        if (CONSTANTS[i].nameLength == 1 && CONSTANTS[i].name[0] == symbol)
-        {
-            return false;
-        }
-    }
-
-    return isalpha(symbol) && strchr(INVALID_VARIABLE_SYMBOLS, symbol) == nullptr;
 }
 
 //! @}

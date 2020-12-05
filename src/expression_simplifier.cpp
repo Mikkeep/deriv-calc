@@ -114,52 +114,54 @@ bool precalcConstExprs(ETNode* root)
 
     bool isChanged = precalcConstExprs(root->left) || precalcConstExprs(root->right);
 
-    if (!isTypeOp(root)) { return isChanged; } 
+    if (!isTypeOp(root) || hasVariable(root, 'x')) { return isChanged; } 
 
     Operation operation = root->data.op;
-    double    value     = GARBAGE_VALUE_FOR_PRECALC; 
+    double    value     = evaluateSubtree(root); 
 
     if (right->type == TYPE_NUMBER)
     {
-        if ((operation == OP_ADD || operation == OP_SUB || operation == OP_MUL || operation == OP_DIV) && 
+        if ((operation == OP_ADD || operation == OP_SUB || operation == OP_MUL) && 
             isTypeNumber(left) && isTypeNumber(right) &&
             !isConstant(left->data.number) && !isConstant(right->data.number))
         {
             simplifyNode(root, TYPE_NUMBER, { evaluateBinary(operation, left->data.number, right->data.number) });
             isChanged = true;
         }
-        else
-        {
-            if (isOperationUnary(operation) && isTypeNumber(root->right))
-            {
-                value = evaluateUnary(operation, root->right->data.number);
-            }
-            else if (!isOperationUnary(operation) && isTypeNumber(root->left) && isTypeNumber(root->right))
-            {
-                value = evaluateBinary(operation, root->left->data.number, root->right->data.number);
-            }
-        }
+        // else
+        // {
+        //     if (isOperationUnary(operation) && isTypeNumber(root->right))
+        //     {
+        //         value = evaluateUnary(operation, root->right->data.number);
+        //     }
+        //     else if (!isOperationUnary(operation) && isTypeNumber(root->left) && isTypeNumber(root->right))
+        //     {
+        //         value = evaluateBinary(operation, root->left->data.number, root->right->data.number);
+        //     }
+        // }
     }
-    else if (isTrigOp(operation) && right->type == TYPE_OP && right->right->type == TYPE_NUMBER)
-    {
-        if (isOperationUnary(right->data.op)) 
-        { 
-            value = evaluateUnary(right->data.op, right->right->data.number); 
-        }
-        else if (right->left->type == TYPE_NUMBER)
-        {
-            value = evaluateBinary(right->data.op, right->left->data.number, right->right->data.number); 
-        }
+    // else if (isTrigOp(operation) && right->type == TYPE_OP && right->right->type == TYPE_NUMBER)
+    // {
+    //     if (isOperationUnary(right->data.op)) 
+    //     { 
+    //         value = evaluateUnary(right->data.op, right->right->data.number); 
+    //     }
+    //     else if (right->left->type == TYPE_NUMBER)
+    //     {
+    //         value = evaluateBinary(right->data.op, right->left->data.number, right->right->data.number); 
+    //     }
 
-        value = evaluateUnary(operation, value);
-    }
+    //     value = evaluateUnary(operation, value);
+    // }
 
-    if (dcompare(value,  GARBAGE_VALUE_FOR_PRECALC) != 0)
-    {
-        if (dcompare(value,  0.0) == 0) { simplifyNode(root, TYPE_NUMBER, { 0.0}); return true; }
-        if (dcompare(value,  1.0) == 0) { simplifyNode(root, TYPE_NUMBER, { 1.0}); return true; }
-        if (dcompare(value, -1.0) == 0) { simplifyNode(root, TYPE_NUMBER, {-1.0}); return true; }
-    }
+    // if (dcompare(value,  GARBAGE_VALUE_FOR_PRECALC) != 0)
+    // {
+
+    if (dcompare(value,  0.0) == 0) { simplifyNode(root, TYPE_NUMBER, { 0.0}); return true; }
+    if (dcompare(value,  1.0) == 0) { simplifyNode(root, TYPE_NUMBER, { 1.0}); return true; }
+    if (dcompare(value, -1.0) == 0) { simplifyNode(root, TYPE_NUMBER, {-1.0}); return true; }
+    
+    // }
 
     return isChanged;
 }

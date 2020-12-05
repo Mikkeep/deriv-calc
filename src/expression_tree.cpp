@@ -20,6 +20,31 @@ bool skipFirstParantheses  (ETNode* operationNode);
 bool skipSecondParantheses (ETNode* operationNode);
 void latexDumpSubtree      (FILE* file, ETNode* node);
 
+ETNode& operator + (const ETNode& tree1, const ETNode& tree2)
+{
+    return BINARY_OP(ADD);
+}
+
+ETNode& operator - (const ETNode& tree1, const ETNode& tree2)
+{
+    return BINARY_OP(SUB);
+}
+
+ETNode& operator * (const ETNode& tree1, const ETNode& tree2)
+{
+    return BINARY_OP(MUL);
+}
+
+ETNode& operator / (const ETNode& tree1, const ETNode& tree2)
+{
+    return BINARY_OP(DIV);
+}
+
+ETNode& operator ^ (const ETNode& tree1, const ETNode& tree2)
+{
+    return BINARY_OP(POW);
+}
+
 ExprTree* construct(ExprTree* tree)
 {
     CHECK_NULL(tree, return nullptr);
@@ -229,6 +254,43 @@ bool isTypeOp(const ETNode* node)
     assert(node != nullptr);
 
     return node->type == TYPE_OP;
+}
+
+double evaluateSubtree(ETNode* root)
+{
+    if (isTypeOp(root))
+    {
+        Operation operation = root->data.op;
+
+        if (isOperationUnary(operation))
+        {
+            return evaluateUnary(operation, evaluateSubtree(root->right));
+        }
+
+        return evaluateBinary(operation, evaluateSubtree(root->left), evaluateSubtree(root->right));
+    }
+    else if (isTypeNumber(root))
+    {
+        return root->data.number;
+    }
+
+    return 0;
+}
+
+void substitute(ETNode* root, char variable, double value)
+{
+    if (root == nullptr) { return; }
+
+    assert(isVariable(variable));
+
+    if (isTypeVar(root) && root->data.var == variable)
+    {
+        root->type = TYPE_NUMBER;
+        root->data.number = value;
+    }
+
+    substitute(root->left,  variable, value);
+    substitute(root->right, variable, value);
 }
 
 bool hasVariable(ETNode* root, char variable)

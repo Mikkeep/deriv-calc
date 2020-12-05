@@ -9,30 +9,33 @@ Options = -Wall -Wpedantic
 
 SrcDir = src
 BinDir = bin
-Intermediates = $(BinDir)/intermediates
+IntDir = $(BinDir)/intermediates
 LibDir = libs
 
 LIBS = $(wildcard $(LibDir)/*.a)
 DEPS = $(wildcard $(SrcDir)/*.h) $(wildcard $(LibDir)/*.h)
-OBJS = $(Intermediates)/main.o $(Intermediates)/math_syntax.o $(Intermediates)/expression_tree.o $(Intermediates)/expression_loader.o $(Intermediates)/expression_simplifier.o $(Intermediates)/differentiation.o
+OBJS = $(IntDir)/main.o $(IntDir)/math_syntax.o $(IntDir)/expression_tree.o $(IntDir)/expression_loader.o $(IntDir)/expression_simplifier.o $(IntDir)/differentiation.o $(IntDir)/taylor_expansion.o
 
 $(BinDir)/deriv_calc.exe: $(OBJS) $(LIBS) $(DEPS)
 	g++ -o $(BinDir)/deriv_calc.exe $(OBJS) $(LIBS)
 
-$(Intermediates)/main.o: $(SrcDir)/main.cpp $(DEPS)
-	g++ -o $(Intermediates)/main.o -c $(SrcDir)/main.cpp $(Options)
+$(IntDir)/main.o: $(SrcDir)/main.cpp $(DEPS)
+	g++ -o $(IntDir)/main.o -c $(SrcDir)/main.cpp $(Options)
 
-$(Intermediates)/math_syntax.o: $(SrcDir)/math_syntax.cpp $(DEPS)
-	g++ -o $(Intermediates)/math_syntax.o -c $(SrcDir)/math_syntax.cpp $(Options)
+$(IntDir)/math_syntax.o: $(SrcDir)/math_syntax.cpp $(DEPS)
+	g++ -o $(IntDir)/math_syntax.o -c $(SrcDir)/math_syntax.cpp $(Options)
 
-$(Intermediates)/expression_tree.o: $(SrcDir)/expression_tree.cpp $(DEPS)
-	g++ -o $(Intermediates)/expression_tree.o -c $(SrcDir)/expression_tree.cpp $(Options)
+$(IntDir)/expression_tree.o: $(SrcDir)/expression_tree.cpp $(DEPS)
+	g++ -o $(IntDir)/expression_tree.o -c $(SrcDir)/expression_tree.cpp $(Options)
 
-$(Intermediates)/expression_loader.o: $(SrcDir)/expression_loader.cpp $(DEPS)
-	g++ -o $(Intermediates)/expression_loader.o -c $(SrcDir)/expression_loader.cpp $(Options)
+$(IntDir)/expression_loader.o: $(SrcDir)/expression_loader.cpp $(DEPS)
+	g++ -o $(IntDir)/expression_loader.o -c $(SrcDir)/expression_loader.cpp $(Options)
 
-$(Intermediates)/expression_simplifier.o: $(SrcDir)/expression_simplifier.cpp $(DEPS)
-	g++ -o $(Intermediates)/expression_simplifier.o -c $(SrcDir)/expression_simplifier.cpp $(Options)
+$(IntDir)/expression_simplifier.o: $(SrcDir)/expression_simplifier.cpp $(DEPS)
+	g++ -o $(IntDir)/expression_simplifier.o -c $(SrcDir)/expression_simplifier.cpp $(Options)
 
-$(Intermediates)/differentiation.o: $(SrcDir)/differentiation.cpp $(DEPS)
-	g++ -o $(Intermediates)/differentiation.o -c $(SrcDir)/differentiation.cpp $(Options)
+$(IntDir)/differentiation.o: $(SrcDir)/differentiation.cpp $(DEPS)
+	g++ -o $(IntDir)/differentiation.o -c $(SrcDir)/differentiation.cpp $(Options)
+
+$(IntDir)/taylor_expansion.o: $(SrcDir)/taylor_expansion.cpp $(DEPS)
+	g++ -o $(IntDir)/taylor_expansion.o -c $(SrcDir)/taylor_expansion.cpp $(Options)
