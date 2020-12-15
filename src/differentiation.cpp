@@ -38,8 +38,8 @@ ETNode* differentiate(ETNode* root)
         case OP_MUL: RETURN((dL * R) + (L * dR));
         case OP_DIV: RETURN((dL * R - L * dR) / (R ^ NUM(2)));
 
-        case OP_POW: if (!hasVariable(root->right, 'x')) { RETURN(R * (L ^ (R - NUM(1))) * dL);            }
-                     else                                { RETURN((L ^ R) * (dR * LOG(L) + (R / L) * dL)); } 
+        case OP_POW: if (!hasVariable(root->right, 'x')) { RETURN(R * (L ^ (R - NUM(1))) * dL);          }
+                     else                                { RETURN((L ^ R) * (dR * LOG(L) + R * dL / L)); } 
 
         case OP_LOG: RETURN((NUM(1) / R) * dR);
         case OP_EXP: RETURN(EXP(R) * dR);    

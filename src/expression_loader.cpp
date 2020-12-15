@@ -253,6 +253,10 @@ ETNode* getUnaryOp(Parser* parser)
         case OP_TAN:
             value = newNode(TYPE_OP, { .op = OP_TAN }, nullptr, value);
             break;
+
+        default:
+            syntaxError(parser, PARSE_UNKNOWN_OPERATION);
+            break;
     }
 
     return value;

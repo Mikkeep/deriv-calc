@@ -1,5 +1,6 @@
-Options = -Wall -Wpedantic
+Options = -std=c++2a
 
+# -Wpedantic -Wall
 # (sin (      5)) + ( ( x  ) * (10     )   )    
 # (((x) - (1)) ^ (3)) * (((x) - (2)) ^ (-2))
 # (sin(((pi) * ((n) + (1))) / (2))) * ((e) ^ (x))    
@@ -14,7 +15,7 @@ LibDir = libs
 
 LIBS = $(wildcard $(LibDir)/*.a)
 DEPS = $(wildcard $(SrcDir)/*.h) $(wildcard $(LibDir)/*.h)
-OBJS = $(IntDir)/main.o $(IntDir)/math_syntax.o $(IntDir)/expression_tree.o $(IntDir)/expression_loader.o $(IntDir)/expression_simplifier.o $(IntDir)/differentiation.o $(IntDir)/taylor_expansion.o
+OBJS = $(IntDir)/main.o $(IntDir)/math_syntax.o $(IntDir)/expression_tree.o $(IntDir)/expression_loader.o $(IntDir)/expression_simplifier.o $(IntDir)/differentiation.o $(IntDir)/taylor_expansion.o $(IntDir)/funnyentific_paper.o
 
 $(BinDir)/deriv_calc.exe: $(OBJS) $(LIBS) $(DEPS)
 	g++ -o $(BinDir)/deriv_calc.exe $(OBJS) $(LIBS)
@@ -39,3 +40,6 @@ $(IntDir)/differentiation.o: $(SrcDir)/differentiation.cpp $(DEPS)
 
 $(IntDir)/taylor_expansion.o: $(SrcDir)/taylor_expansion.cpp $(DEPS)
 	g++ -o $(IntDir)/taylor_expansion.o -c $(SrcDir)/taylor_expansion.cpp $(Options)
+
+$(IntDir)/funnyentific_paper.o: $(SrcDir)/funnyentific_paper.cpp $(DEPS)
+	g++ -o $(IntDir)/funnyentific_paper.o -c $(SrcDir)/funnyentific_paper.cpp $(Options)

@@ -20,6 +20,7 @@
 #include "expression_simplifier.h"
 #include "differentiation.h"
 #include "taylor_expansion.h"
+#include "funnyentific_paper.h"
 
 int main(int argc, char* argv[])
 {
@@ -38,27 +39,29 @@ int main(int argc, char* argv[])
         return -1; 
     }
 
-    ExprTree expansion = {};
-    construct(&expansion);
+    makeScientificPaper(exprTree.root);
 
-    expansion.root = taylorExpansion(exprTree.root, 0, 6);
-    simplifyTree(&expansion);
+    // latexDump(&exprTree);
 
-    graphDump(&expansion);
-    latexDump(&expansion);
+    // ExprTree expansion = {};
+    // // construct(&expansion);
+    // // expansion.root = taylorExpansion(exprTree.root, 0, 5);
+    // // simplifyTree(&expansion);
 
-    ExprTree derivTree = {};
-    construct(&derivTree);
+    // // graphDump(&expansion);
+    // // latexDump(&expansion);
 
-    derivTree.root = differentiate(exprTree.root);
-    simplifyTree(&derivTree);
+    // ExprTree derivTree = {};
+    // construct(&derivTree);
+    // derivTree.root = differentiate(exprTree.root);
+    // simplifyTree(&derivTree);
 
     // graphDump(&derivTree);
-    latexDump(&derivTree);
+    // latexDump(&derivTree);
 
+    // destroy(&expansion);
+    // destroy(&derivTree);
     destroy(&exprTree);
-    destroy(&expansion);
-    destroy(&derivTree);
 
     LG_Close();
 

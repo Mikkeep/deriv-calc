@@ -11,7 +11,9 @@ enum SimplifyArgTarget
 {
     SAT_FST,
     SAT_SND,
-    SAT_ANY
+    SAT_ANY,
+
+    SAT_EQL
 };
 
 struct SimplifyExpr
@@ -22,7 +24,7 @@ struct SimplifyExpr
     double            result;
 };
 
-static const size_t SIMPLIFY_EXPRS_COUNT   = 13;
+static const size_t SIMPLIFY_EXPRS_COUNT   = 15;
 static const double SIMPLIFY_EXPR_IDENTITY = NAN;
 #define isIdentityType(simplifyExpr) isnan(simplifyExpr.result)
 
@@ -30,12 +32,14 @@ static const SimplifyExpr SIMPLIFY_EXPRS[SIMPLIFY_EXPRS_COUNT] =
                             { 
                                 {OP_ADD, SAT_ANY, 0.0,     SIMPLIFY_EXPR_IDENTITY},
                                 {OP_SUB, SAT_SND, 0.0,     SIMPLIFY_EXPR_IDENTITY},
+                                {OP_SUB, SAT_EQL, 0.0,     0.0                   },
 
                                 {OP_MUL, SAT_ANY, 1.0,     SIMPLIFY_EXPR_IDENTITY},
                                 {OP_MUL, SAT_ANY, 0.0,     0.0                   },
                                 
                                 {OP_DIV, SAT_SND, 1.0,     SIMPLIFY_EXPR_IDENTITY},
-                                {OP_DIV, SAT_FST, 0.0,     0.0},
+                                {OP_DIV, SAT_FST, 0.0,     0.0                   },
+                                {OP_DIV, SAT_EQL, 0.0,     1.0                   },
 
                                 {OP_POW, SAT_SND, 1.0,     SIMPLIFY_EXPR_IDENTITY},
                                 {OP_POW, SAT_SND, 0.0,     1.0                   },
@@ -52,3 +56,4 @@ static const SimplifyExpr SIMPLIFY_EXPRS[SIMPLIFY_EXPRS_COUNT] =
 //-----------------------------------------------------------------------------
 
 void simplifyTree(ExprTree* tree);
+void simplifyTree(ETNode* root);

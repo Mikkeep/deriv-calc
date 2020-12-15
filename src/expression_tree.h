@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdarg.h>
+#include <stdio.h>
 #include "math_syntax.h"
 
 enum NodeType
@@ -29,14 +30,18 @@ struct ETNode
     ETNode*    right  = nullptr;
 };
 
+struct Substitution
+{
+    ETNode* root;
+    char    letter;
+};
+
 struct ExprTree
 {
     ETNode* root = nullptr;
 };
 
-static const bool ET_TRAVERSE_RUN = true;
-
-#define UNARY_OP(operation, arg) *newNode(TYPE_OP, { .op = OP_##operation }, NULL,             (ETNode*) &(arg))
+#define UNARY_OP(operation, arg) *newNode(TYPE_OP, { .op = OP_##operation }, nullptr,          (ETNode*) &(arg))
 #define BINARY_OP(operation)     *newNode(TYPE_OP, { .op = OP_##operation }, (ETNode*) &tree1, (ETNode*) &tree2)
 
 #define LOG(arg) UNARY_OP(LOG, arg)
@@ -48,43 +53,47 @@ static const bool ET_TRAVERSE_RUN = true;
 #define NUM(num)      (*newNode(TYPE_NUMBER, { .number = num      }, nullptr, nullptr))
 #define VAR(variable) (*newNode(TYPE_VAR,    { .var    = variable }, nullptr, nullptr))
 
-ETNode&   operator +        (const ETNode& tree1, const ETNode& tree2);
-ETNode&   operator -        (const ETNode& tree1, const ETNode& tree2);
-ETNode&   operator *        (const ETNode& tree1, const ETNode& tree2);
-ETNode&   operator /        (const ETNode& tree1, const ETNode& tree2);
-ETNode&   operator ^        (const ETNode& tree1, const ETNode& tree2);
+ETNode&   operator +       (const ETNode& tree1, const ETNode& tree2);
+ETNode&   operator -       (const ETNode& tree1, const ETNode& tree2);
+ETNode&   operator *       (const ETNode& tree1, const ETNode& tree2);
+ETNode&   operator /       (const ETNode& tree1, const ETNode& tree2);
+ETNode&   operator ^       (const ETNode& tree1, const ETNode& tree2);
 
-ExprTree* construct         (ExprTree* tree);
-void      destroy           (ExprTree* tree);
-void      destroySubtree    (ETNode* root);
+ExprTree* construct        (ExprTree* tree);
+void      destroy          (ExprTree* tree);
+void      destroySubtree   (ETNode* root);
 
-ExprTree* newTree           ();
-void      deleteTree        (ExprTree* tree);
+ExprTree* newTree          ();
+void      deleteTree       (ExprTree* tree);
 
-ETNode*   newNode           ();
-ETNode*   newNode           (NodeType type, ETNodeData data, ETNode* left, ETNode* right);
-void      deleteNode        (ETNode* node);
+ETNode*   newNode          ();
+ETNode*   newNode          (NodeType type, ETNodeData data, ETNode* left, ETNode* right);
+void      deleteNode       (ETNode* node);
 
-void      copyNode          (ETNode* dest, const ETNode* src);
-ETNode*   copyTree          (const ETNode* node);
+void      copyNode         (ETNode* dest, const ETNode* src);
+ETNode*   copyTree         (const ETNode* node);
+void      treeSize         (const ETNode* node, size_t* size);
 
-void      preOrderTraverse  (ETNode* root, bool (*function)(ETNode* node, va_list args), ...);
-void      inOrderTraverse   (ETNode* root, bool (*function)(ETNode* node, va_list args), ...);
-void      postOrderTraverse (ETNode* root, bool (*function)(ETNode* node, va_list args), ...);
+bool      isLeft           (const ETNode* node);
+bool      isTypeNumber     (const ETNode* node);
+bool      isTypeVar        (const ETNode* node);
+bool      isTypeOp         (const ETNode* node);
 
-bool      isLeft            (const ETNode* node);
-bool      isTypeNumber      (const ETNode* node);
-bool      isTypeVar         (const ETNode* node);
-bool      isTypeOp          (const ETNode* node);
+bool      equalData        (NodeType type, ETNodeData data1, ETNodeData data2);
+bool      areTreesEqual    (ETNode* root1, ETNode* root2);
+double    evaluateSubtree  (ETNode* root);
+void      substitute       (ETNode* root, char variable, double value);
+bool      hasVariable      (ETNode* root, char variable);
 
-double    evaluateSubtree   (ETNode* root);
-void      substitute        (ETNode* root, char variable, double value);
-bool      hasVariable       (ETNode* root, char variable);
+void      setData          (ETNode* node, NodeType type, ETNodeData data);
+void      setData          (ETNode* node, double number);
+void      setData          (ETNode* node, char var);
+void      setData          (ETNode* node, Operation op);
 
-void      setData           (ETNode* node, NodeType type, ETNodeData data);
-void      setData           (ETNode* node, double number);
-void      setData           (ETNode* node, char var);
-void      setData           (ETNode* node, Operation op);
-
-void      graphDump         (ExprTree* tree);
-void      latexDump         (ExprTree* tree);
+void      graphDump        (ExprTree* tree);
+void      graphDump        (ETNode* root);
+void      latexDump        (ExprTree* tree);
+void      latexDump        (ETNode* root);
+void      latexDumpSubtree (FILE* file, ETNode* node);
+void      latexDumpSubtree (FILE* file, ETNode* node, Substitution* substitutions, size_t substitutionsCount);
+int       counterFileUpdate(const char* filename);
