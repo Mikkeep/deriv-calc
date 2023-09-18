@@ -5,6 +5,9 @@ on:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
+  schedule:
+  # Run the cron job through the week Mon-Fri at 3PM.
+    - cron: "0 15 * * 1-5"
 
 jobs:
   runscript:
@@ -22,4 +25,9 @@ jobs:
       - name: Run Docker container
         run: |
                   chmod +x ${GITHUB_WORKSPACE}/run.sh
-                  ${GITHUB_WORKSPACE}/run.sh
+                  echo "ARTI=${GITHUB_WORKSPACE}/run.sh" >> $GITHUB_ENV
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: fuzz_artifact
+          path: "${{ env. }}"
