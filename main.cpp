@@ -3,7 +3,7 @@
 float main() {
     // Function calls to calculate
     // Write your all possible input scenarios here
-    // Notice that calculator code written here works with floats now
+//    // Notice that calculator code written here works with floats now
 //    double consti = 1.0;
 //    isConstant(consti);
     char a = "b";
