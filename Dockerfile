@@ -24,7 +24,7 @@ RUN sh -c "$(curl -fsSL https://raw.githubusercontent.com/CodeIntelligenceTestin
 #Provide your repository link below
 RUN git clone https://github.com/Mikkeep/deriv-calc.git
 
-WORKDIR /deriv-calc/deriv-calc2
+WORKDIR /deriv-calc/deriv-calc
 RUN ls -a
 
-CMD ["sh", "-c", "cifuzz run test:test --use-sandbox=false > /deriv-calc/deriv-calc2/fuzzing.log 2>&1 && cat /deriv-calc/deriv-calc2/fuzzing.log"]
+CMD ["sh", "-c", "cifuzz run test:test --use-sandbox=false > /deriv-calc/deriv-calc/fuzzing.log 2>&1 && cat /deriv-calc/deriv-calc/fuzzing.log"]
