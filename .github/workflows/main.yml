@@ -1,0 +1,25 @@
+name: Fuzzing with Docker
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  runscript:
+    name: Build & run Docker container
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Call build.sh script
+        run: |
+                 chmod +x ${GITHUB_WORKSPACE}/build.sh
+                 ${GITHUB_WORKSPACE}/build.sh
+        shell: bash
+      
+      - name: Run Docker container
+        run: |
+                  chmod +x ${GITHUB_WORKSPACE}/run.sh
+                  ${GITHUB_WORKSPACE}/run.sh
