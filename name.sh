@@ -1,2 +1,2 @@
-#!/bin/bash 
-IMAGE=cifuzz-docker-image%
+#!/bin/bash
+IMAGE=cifuzz-docker-image
