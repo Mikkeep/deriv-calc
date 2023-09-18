@@ -25,9 +25,10 @@ jobs:
       - name: Run Docker container
         run: |
                   chmod +x ${GITHUB_WORKSPACE}/run.sh
-                  echo "ARTI=sh -x ${GITHUB_WORKSPACE}/run.sh" >> $GITHUB_ENV
+                  mkdir -p fuzz_results
+                  ${GITHUB_WORKSPACE}/run.sh | tee fuzz_results/fuzz_artifact_${{ github.run_id }}.log
 
       - uses: actions/upload-artifact@v3
         with:
-          name: fuzz_artifact
-          path: "${{ env.ARTI }}"
+          name: fuzz_artifact_${{ github.run_id }}.log
+          path: fuzz_results
