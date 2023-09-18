@@ -2,7 +2,7 @@
 #include <ctype.h>
 #include <string.h>
 #include "math_syntax.h"
-#include "utilib.h"
+//#include "utilib.h"
 
 //----------------------------------------------------------------------------- 
 //! @addtogroup MATH_CONSTANTS
@@ -12,10 +12,10 @@ bool isConstant(double value)
 {
     for (size_t i = 0; i < CONSTANTS_COUNT; i++)
     {
-        if (dcompare(value, CONSTANTS[i].value) == 0) 
-        { 
-            return true; 
-        }
+//        if (dcompare(value, CONSTANTS[i].value) == 0) 
+//        { 
+//            return true; 
+//        }
     }
 
     return false;
@@ -25,10 +25,10 @@ const char* getConstantName(double constant)
 {
     for (size_t i = 0; i < CONSTANTS_COUNT; i++)
     {
-        if (dcompare(constant, CONSTANTS[i].value) == 0) 
-        { 
-            return CONSTANTS[i].name; 
-        }
+//        if (dcompare(constant, CONSTANTS[i].value) == 0) 
+//        { 
+//            return CONSTANTS[i].name; 
+//        }
     }
 
     return nullptr;
