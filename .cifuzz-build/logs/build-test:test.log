@@ -1,0 +1,15 @@
+Loading: 
+Loading: 
+Loading: 0 packages loaded
+Analyzing: target //test:test_bin (0 packages loaded, 0 targets configured)
+INFO: Analyzed target //test:test_bin (2 packages loaded, 14 targets configured).
+INFO: Found 1 target...
+[6 / 17] [Prepa] BazelWorkspaceStatusAction stable-status.txt
+ERROR: /home/mikke/Git/deriv-calc/test/BUILD.bazel:3:13: Compiling test/test.cpp failed: missing input file '//test:test.cpp'
+ERROR: /home/mikke/Git/deriv-calc/test/BUILD.bazel:3:13: Compiling test/test.cpp failed: 1 input file(s) do not exist
+Target //test:test_bin failed to build
+ERROR: /home/mikke/Git/deriv-calc/test/BUILD.bazel:3:13 Compiling test/test.cpp failed: 1 input file(s) do not exist
+INFO: Elapsed time: 0.299s, Critical Path: 0.02s
+INFO: 8 processes: 8 internal.
+FAILED: Build did NOT complete successfully
+ERROR: Build failed. Not running target

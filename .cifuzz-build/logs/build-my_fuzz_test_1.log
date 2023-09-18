@@ -1,0 +1,19 @@
+Loading: 
+Loading: 
+Loading: 2 packages loaded
+INFO: Build options --@cifuzz//:__internal_has_libfuzzer, --@rules_fuzzing//fuzzing:cc_engine, --@rules_fuzzing//fuzzing:cc_engine_instrumentation, and 3 more have changed, discarding analysis cache.
+Analyzing: target //:my_fuzz_test_1_bin (2 packages loaded, 0 targets configured)
+Analyzing: target //:my_fuzz_test_1_bin (33 packages loaded, 15 targets configured)
+Analyzing: target //:my_fuzz_test_1_bin (36 packages loaded, 259 targets configured)
+Analyzing: target //:my_fuzz_test_1_bin (36 packages loaded, 259 targets configured)
+Analyzing: target //:my_fuzz_test_1_bin (40 packages loaded, 327 targets configured)
+INFO: Analyzed target //:my_fuzz_test_1_bin (46 packages loaded, 523 targets configured).
+INFO: Found 1 target...
+[0 / 3] [Prepa] BazelWorkspaceStatusAction stable-status.txt
+INFO: From Linking my_fuzz_test_1_raw_:
+/usr/bin/ld.gold: warning: Cannot export local symbol '__asan_extra_spill_area'
+Target //:my_fuzz_test_1_bin up-to-date:
+  bazel-bin/my_fuzz_test_1_bin
+INFO: Elapsed time: 6.738s, Critical Path: 0.80s
+INFO: 17 processes: 13 internal, 4 linux-sandbox.
+INFO: Build completed successfully, 17 total actions

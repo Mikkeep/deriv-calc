@@ -1,0 +1,6 @@
+cc_library(
+    name = "deriv-calc",
+    srcs = ["math_syntax.cpp"],
+    hdrs = ["math_syntax.h", "utilib.h"],
+    visibility = ["//visibility:public"],
+)
