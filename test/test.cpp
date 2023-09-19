@@ -11,11 +11,11 @@ FUZZ_TEST(const uint8_t *data, size_t size) {
       FuzzedDataProvider fuzzed_data(data, size);
       int first_fuzz = fuzzed_data.ConsumeIntegral<int>();
       int second_fuzz = fuzzed_data.ConsumeIntegral<int>();
-      double correct = first_fuzz;
       Operation stringi = OP_ADD;
       std::string random_string = fuzzed_data.ConsumeRandomLengthString();
-//      stringi = random_string[0];
       evaluateBinary(stringi, first_fuzz, second_fuzz);
-//      isVariable(random_string[0]);
-//      isConstant(correct);
+      Operation stringi2 = OP_TAN;
+      isArithmeticOp(stringi2);
+      isTrigOp(stringi);
+      isVariable(random_string[0]);
 }
